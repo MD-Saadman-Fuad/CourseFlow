@@ -46,8 +46,8 @@ export default function ProfilePage() {
           <div className="text-sm text-gray-600">{user.email}</div>
           <div className="mt-2">
             <button onClick={async () => {
-              try { await signOut({ redirect: false }) } catch (e) {}
-              try { localStorage.removeItem('currentUser'); window.dispatchEvent(new Event('local-user-changed')) } catch (e) {}
+              try { await signOut({ redirect: false }) } catch (e) { }
+              try { localStorage.removeItem('currentUser'); window.dispatchEvent(new Event('local-user-changed')) } catch (e) { }
               try { router.push('/') } catch (e) { window.location.href = '/' }
             }} className="btn btn-ghost btn-sm">Sign out</button>
           </div>

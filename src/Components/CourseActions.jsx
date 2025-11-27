@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-export default function CourseActions({ courseId, initialSeats, totalSeats }) {
+export default function CourseActions({ courseId, initialSeats, totalSeats , email}) {
     const [enrolled, setEnrolled] = useState(false);
     const [seats, setSeats] = useState(initialSeats ?? 0);
 
@@ -34,22 +34,91 @@ export default function CourseActions({ courseId, initialSeats, totalSeats }) {
         }
     }
 
-    function handleAdd() {
+    async function handleAdd() {
         if (seats <= 0) {
             alert("No seats available");
             return;
         }
-        setEnrolled(true);
-        setSeats((s) => s - 1);
-        updateLocal(true);
-        alert("You have been added to the course (local demo)");
+
+        // determine user email (prop first, then localStorage)
+        let userEmail = email
+        try {
+            if (!userEmail) {
+                const raw = localStorage.getItem('currentUser')
+                if (raw) userEmail = JSON.parse(raw).email
+            }
+        } catch (e) { userEmail = userEmail }
+
+        if (!userEmail) {
+            alert('You must be signed in to enroll')
+            return
+        }
+
+        // optimistic UI
+        const prevSeats = seats
+        const prevEnrolled = enrolled
+        setEnrolled(true)
+        setSeats((s) => s - 1)
+        updateLocal(true)
+
+        try {
+            const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+            // Backend endpoint expected: PUT /users/:email/courses
+            // Body: { action: 'add', courseId: '<id>' }
+            const res = await fetch(`${BACKEND}/users/${encodeURIComponent(userEmail)}/courses`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'add', courseId: String(courseId) })
+            })
+
+            if (!res.ok) throw new Error(`Server returned ${res.status}`)
+        } catch (err) {
+            // rollback
+            setEnrolled(prevEnrolled)
+            setSeats(prevSeats)
+            updateLocal(prevEnrolled)
+            alert(err.message || 'Failed to enroll')
+        }
     }
 
-    function handleDrop() {
-        setEnrolled(false);
-        setSeats((s) => Math.min((s ?? 0) + 1, totalSeats ?? s + 1));
-        updateLocal(false);
-        alert("You have been removed from the course (local demo)");
+    async function handleDrop() {
+        let userEmail = email
+        try {
+            if (!userEmail) {
+                const raw = localStorage.getItem('currentUser')
+                if (raw) userEmail = JSON.parse(raw).email
+            }
+        } catch (e) { userEmail = userEmail }
+
+        if (!userEmail) {
+            alert('You must be signed in to drop')
+            return
+        }
+
+        const prevSeats = seats
+        const prevEnrolled = enrolled
+        setEnrolled(false)
+        setSeats((s) => Math.min((s ?? 0) + 1, totalSeats ?? (s ?? 0) + 1))
+        updateLocal(false)
+
+        try {
+            const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+            // Backend endpoint expected: PUT /users/:email/courses
+            // Body: { action: 'remove', courseId: '<id>' }
+            const res = await fetch(`${BACKEND}/users/${encodeURIComponent(userEmail)}/courses`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'remove', courseId: String(courseId) })
+            })
+
+            if (!res.ok) throw new Error(`Server returned ${res.status}`)
+        } catch (err) {
+            // rollback
+            setEnrolled(prevEnrolled)
+            setSeats(prevSeats)
+            updateLocal(prevEnrolled)
+            alert(err.message || 'Failed to drop')
+        }
     }
 
     return (

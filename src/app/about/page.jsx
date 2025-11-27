@@ -102,11 +102,11 @@ export default function page() {
             </section>
 
             {/* Team / Testimonials */}
-            <section className="py-12 bg-base-200">
+            <section className="py-12 bg-base-200 ">
                 <div className="max-w-6xl mx-auto px-4">
                     <h2 className="text-2xl font-semibold mb-6">Our Team & Testimonials</h2>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-black">
                         <div className="p-6 bg-white rounded shadow-sm text-center">
                             <div className="h-20 w-20 rounded-full bg-primary mx-auto mb-3" />
                             <div className="font-semibold">Alex Johnson</div>

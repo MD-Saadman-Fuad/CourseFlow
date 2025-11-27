@@ -129,7 +129,7 @@ export default function CoursePage() {
                     )}
                 </div>
 
-                <CourseActions courseId={String(id)} initialSeats={course.seatsAvailable} totalSeats={course.totalSeats} />
+                <CourseActions courseId={String(id)} initialSeats={course.seatsAvailable} email={session?.user?.email} totalSeats={course.totalSeats} />
             </section>
         </main>
     );
