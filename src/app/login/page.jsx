@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,7 +26,16 @@ export default function LoginPage() {
 
       if (user.password !== password) return setError('Incorrect password');
 
-      localStorage.setItem('currentUser', JSON.stringify({ id: user._id ?? user.id ?? user.email, name: user.name, email: user.email }));
+      // store both photoUrl and normalized image to ensure avatar availability
+      const stored = {
+        id: user._id ?? user.id ?? user.email,
+        name: user.name,
+        email: user.email,
+        photoUrl: user.photoUrl ?? user.image ?? null,
+        image: user.photoUrl ?? user.image ?? null,
+      }
+      localStorage.setItem('currentUser', JSON.stringify(stored));
+      try { window.dispatchEvent(new Event('local-user-changed')) } catch (e) { }
       router.push('/');
     } catch (err) {
       setError(err.message || 'Login failed');
@@ -35,7 +45,7 @@ export default function LoginPage() {
   }
 
   function handleSocial(provider) {
-    alert(`${provider} sign-in is not configured in this demo. Use NextAuth and OAuth to enable.`);
+    signIn(provider, { callbackUrl: '/' });
   }
 
   return (
@@ -43,8 +53,8 @@ export default function LoginPage() {
       <h1 className="text-2xl font-semibold mb-4">Sign in</h1>
 
       <div className="space-y-4 mb-4">
-        <button onClick={() => handleSocial('Google')} className="btn btn-outline w-full">Continue with Google</button>
-        <button onClick={() => handleSocial('GitHub')} className="btn btn-outline w-full">Continue with GitHub</button>
+        <button onClick={() => handleSocial('google')} className="btn btn-outline w-full">Continue with Google</button>
+        <button onClick={() => handleSocial('github')} className="btn btn-outline w-full">Continue with GitHub</button>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3 bg-white p-6 rounded shadow-sm">

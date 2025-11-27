@@ -2,7 +2,8 @@
 import Link from 'next/link'
 import CourseActions from '@/Components/CourseActions'
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react'
 
 export default function CoursePage() {
     const params = useParams();
@@ -10,20 +11,54 @@ export default function CoursePage() {
     const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const { data: session, status } = useSession()
+    const router = useRouter()
+    const [localUser, setLocalUser] = useState(null)
 
     useEffect(() => {
-        if (!id) return;
+        if (!id) {
+            console.error('No course ID provided');
+            return;
+        }
+
+        // load local user
+        try {
+            const raw = localStorage.getItem('currentUser')
+            setLocalUser(raw ? JSON.parse(raw) : null)
+        } catch (e) {
+            setLocalUser(null)
+        }
+
+        // if auth status is known and unauthenticated, redirect
+        if (status === 'unauthenticated' && !localStorage.getItem('currentUser')) {
+            router.push('/login')
+            return
+        }
+
         // reset error asynchronously to avoid synchronous setState inside effect
         Promise.resolve().then(() => setError(null));
-        const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-        fetch(`${BACKEND}/courses/${encodeURIComponent(String(id))}`)
-            .then((res) => {
-                if (!res.ok) throw new Error(`Course not found (${res.status})`);
-                return res.json();
-            })
-            .then((data) => setCourse(data))
-            .catch((err) => setError(err.message))
-            .finally(() => setLoading(false));
+
+        // Only fetch course after we know user is present (either session or localUser)
+        const userPresent = !!(session?.user || (localStorage.getItem('currentUser')))
+        if (!userPresent) {
+            // show redirecting/loading until redirect happens
+            setLoading(false)
+            return
+        }
+
+        (async () => {
+            try {
+                const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+                const res = await fetch(`${BACKEND}/courses/${encodeURIComponent(String(id))}`)
+                if (!res.ok) throw new Error(`Course not found (${res.status})`)
+                const data = await res.json()
+                setCourse(data)
+            } catch (err) {
+                setError(err.message)
+            } finally {
+                setLoading(false)
+            }
+        })()
     }, [id]);
 
     if (loading) return <div className="p-8 text-center">Loading course...</div>;

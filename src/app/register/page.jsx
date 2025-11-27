@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -42,7 +43,8 @@ export default function RegisterPage() {
   }
 
   function handleSocial(provider) {
-    alert(`${provider} sign-in is not configured on this demo.\nTo enable, set up OAuth and NextAuth.`);
+    // trigger NextAuth social sign-in and redirect to home after callback
+    signIn(provider, { callbackUrl: '/' });
   }
 
   return (
@@ -50,8 +52,8 @@ export default function RegisterPage() {
       <h1 className="text-2xl font-semibold mb-4">Create an account</h1>
 
       <div className="space-y-4 mb-4">
-        <button onClick={() => handleSocial('Google')} className="btn btn-outline w-full">Continue with Google</button>
-        <button onClick={() => handleSocial('GitHub')} className="btn btn-outline w-full">Continue with GitHub</button>
+        <button onClick={() => handleSocial('google')} className="btn btn-outline w-full">Continue with Google</button>
+        <button onClick={() => handleSocial('github')} className="btn btn-outline w-full">Continue with GitHub</button>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3 bg-white p-6 rounded shadow-sm">
