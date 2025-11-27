@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-export default function CourseActions({ courseId, initialSeats, totalSeats , email}) {
+export default function CourseActions({ courseId, initialSeats, totalSeats, email }) {
     const [enrolled, setEnrolled] = useState(false);
     const [seats, setSeats] = useState(initialSeats ?? 0);
 
@@ -65,13 +65,18 @@ export default function CourseActions({ courseId, initialSeats, totalSeats , ema
             const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
             // Backend endpoint expected: PUT /users/:email/courses
             // Body: { action: 'add', courseId: '<id>' }
-            const res = await fetch(`${BACKEND}/users/${encodeURIComponent(userEmail)}/courses`, {
+            const url = `${BACKEND}/users/${encodeURIComponent(userEmail)}/courses`
+            console.log('Enroll request ->', url)
+            const res = await fetch(url, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'add', courseId: String(courseId) })
             })
-
-            if (!res.ok) throw new Error(`Server returned ${res.status}`)
+            if (!res.ok) {
+                const text = await res.text().catch(() => null)
+                console.error('Enroll failed:', res.status, text)
+                throw new Error(text || `Server returned ${res.status}`)
+            }
         } catch (err) {
             // rollback
             setEnrolled(prevEnrolled)
@@ -105,13 +110,18 @@ export default function CourseActions({ courseId, initialSeats, totalSeats , ema
             const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
             // Backend endpoint expected: PUT /users/:email/courses
             // Body: { action: 'remove', courseId: '<id>' }
-            const res = await fetch(`${BACKEND}/users/${encodeURIComponent(userEmail)}/courses`, {
+            const url = `${BACKEND}/users/${encodeURIComponent(userEmail)}/courses`
+            console.log('Drop request ->', url)
+            const res = await fetch(url, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'remove', courseId: String(courseId) })
             })
-
-            if (!res.ok) throw new Error(`Server returned ${res.status}`)
+            if (!res.ok) {
+                const text = await res.text().catch(() => null)
+                console.error('Drop failed:', res.status, text)
+                throw new Error(text || `Server returned ${res.status}`)
+            }
         } catch (err) {
             // rollback
             setEnrolled(prevEnrolled)
