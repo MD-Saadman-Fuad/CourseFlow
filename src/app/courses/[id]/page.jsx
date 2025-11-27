@@ -15,7 +15,8 @@ export default function CoursePage() {
         if (!id) return;
         // reset error asynchronously to avoid synchronous setState inside effect
         Promise.resolve().then(() => setError(null));
-        fetch(`http://localhost:3001/courses/${encodeURIComponent(String(id))}`)
+        const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+        fetch(`${BACKEND}/courses/${encodeURIComponent(String(id))}`)
             .then((res) => {
                 if (!res.ok) throw new Error(`Course not found (${res.status})`);
                 return res.json();

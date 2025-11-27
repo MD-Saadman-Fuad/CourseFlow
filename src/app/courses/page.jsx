@@ -2,7 +2,8 @@ import Link from 'next/link'
 
 async function getCourses() {
   try {
-    const res = await fetch('http://localhost:3001/courses', { cache: 'no-store' });
+    const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+    const res = await fetch(`${BACKEND}/courses`, { cache: 'no-store' });
     if (!res.ok) return [];
     return res.json();
   } catch (e) {

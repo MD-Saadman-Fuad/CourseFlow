@@ -16,7 +16,8 @@ export default function LoginPage() {
     if (!email || !password) return setError('Please enter email and password');
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:3001/users?email=${encodeURIComponent(email)}`);
+      const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+      const res = await fetch(`${BACKEND}/users?email=${encodeURIComponent(email)}`);
       if (!res.ok) throw new Error('Network response was not ok');
       const users = await res.json();
       if (!Array.isArray(users) || users.length === 0) return setError('User not found');

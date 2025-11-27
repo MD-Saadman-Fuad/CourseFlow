@@ -7,6 +7,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [photoUrl, setPhotoUrl] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,15 +21,19 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:3001/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
-      });
-      if (!res.ok) throw new Error("Failed to register");
-      const data = await res.json();
+      const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+      const res = await fetch(`${BACKEND}/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, photoUrl }),
+      })
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}))
+        throw new Error(e?.message || 'Failed to register')
+      }
+      const data = await res.json().catch(() => ({}))
       // registration success — navigate to login
-      router.push('/login');
+      router.push('/login')
     } catch (err) {
       setError(err.message || 'Registration failed');
     } finally {
@@ -53,6 +58,7 @@ export default function RegisterPage() {
         {error && <div className="text-sm text-red-600">{error}</div>}
         <input value={name} onChange={e => setName(e.target.value)} placeholder="Full name" className="input input-bordered w-full" />
         <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" type="email" className="input input-bordered w-full" />
+        <input value={photoUrl} onChange={e => setPhotoUrl(e.target.value)} placeholder="Photo URL (optional)" type="url" className="input input-bordered w-full" />
         <input value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" type="password" className="input input-bordered w-full" />
         <input value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Confirm password" type="password" className="input input-bordered w-full" />
 
